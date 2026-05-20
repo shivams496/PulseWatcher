@@ -116,3 +116,35 @@ st.markdown(f"""
 - High reconstruction error = anomaly alert
 - **Current threshold: `{threshold:.6f}`** (95th percentile of normal errors)
 """)
+# --- Explainability Section ---
+if is_anomaly:
+    st.markdown("---")
+    st.markdown("### 🔍 Why was this flagged? — Feature Importance")
+
+    # Calculate per-timestep reconstruction error
+    tensor = torch.tensor(beat[np.newaxis, :, np.newaxis].astype(np.float32))
+    with torch.no_grad():
+        output = model(tensor)
+
+    per_timestep_error = ((output[0, :, 0].numpy() - beat) ** 2)
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Bar(
+        x=list(range(187)),
+        y=per_timestep_error,
+        marker_color=per_timestep_error,
+        marker_colorscale="Reds",
+        name="Reconstruction Error per Timestep"
+    ))
+    fig2.update_layout(
+        title="Which part of the heartbeat caused the anomaly alert?",
+        xaxis_title="Timestep",
+        yaxis_title="Reconstruction Error",
+        height=300,
+        plot_bgcolor="black",
+        paper_bgcolor="#0e1117",
+        font=dict(color="white")
+    )
+    st.plotly_chart(fig2, use_container_width=True)  
+    st.caption("Red bars show which timesteps the model struggled to reconstruct — these caused the anomaly alert.")
+    

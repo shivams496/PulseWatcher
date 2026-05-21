@@ -17,6 +17,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# Prevent auto-rerun
+if "initialized" not in st.session_state:
+    st.session_state.initialized = True
 
 # ─── GLOBAL CSS ─────────────────────────────────────────────────────────────
 st.markdown("""
@@ -265,8 +268,9 @@ with st.sidebar:
 
     max_index = 99
     beat_index = st.slider(
-        "Beat index", 0, max_index, 0,
-        help="Scroll through individual heartbeats from the dataset"
+    "Beat index", 0, max_index, 0,
+    help="Scroll through individual heartbeats from the dataset",
+    key="beat_slider"
     )
 
     st.markdown("---")

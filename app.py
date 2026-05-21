@@ -247,7 +247,7 @@ def get_reconstruction(beat_index, beat_type_str):
         output = model(tensor)
     recon = output.numpy()[0, :, 0]
     error = float(np.mean((recon - beat) ** 2))
-    return beat.tolist(), recon.tolist(), error
+    return beat, recon, error
 
 
 # ─── SIDEBAR ────────────────────────────────────────────────────────────────

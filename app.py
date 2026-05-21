@@ -241,8 +241,10 @@ def get_reconstruction(beat_index, beat_type_str):
         beat[np.newaxis, :, np.newaxis].astype(np.float32)
     )
     with torch.no_grad():
-        output = model(beat[np.newaxis, :, np.newaxis]
-                      .astype(np.float32))
+        tensor = torch.tensor(
+            beat[np.newaxis, :, np.newaxis].astype(np.float32)
+        )
+        output = model(tensor)
     recon = output.numpy()[0, :, 0]
     error = float(np.mean((recon - beat) ** 2))
     return beat.tolist(), recon.tolist(), error

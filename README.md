@@ -10,7 +10,7 @@ pinned: false
 
 # ❤️ PulseWatcher — ECG Anomaly Detection
 
-> Real-time cardiac arrhythmia detection using unsupervised deep learning.
+> Cardiac arrhythmia detection using unsupervised deep learning.
 > Trained exclusively on normal heartbeats — anything the model can't reconstruct is flagged as an anomaly.
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Hugging_Face-blue)](https://huggingface.co/spaces/shivams496/Pulsewatcher)

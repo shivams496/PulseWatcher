@@ -111,7 +111,6 @@ st.markdown("""
         color: #ef4444;
         font-family: 'IBM Plex Mono', monospace;
         letter-spacing: 1px;
-        animation: pulse 1.5s infinite;
     }
     @keyframes pulse {
         0%, 100% { opacity: 1; }

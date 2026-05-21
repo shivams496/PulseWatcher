@@ -1,2 +1,5 @@
 *.npy filter=lfs diff=lfs merge=lfs -text
 *.pt filter=lfs diff=lfs merge=lfs -text
+models/lstm_autoencoder.pt filter=lfs diff=lfs merge=lfs -text
+models/threshold.npy filter=lfs diff=lfs merge=lfs -text
+data/*.npy filter=lfs diff=lfs merge=lfs -text

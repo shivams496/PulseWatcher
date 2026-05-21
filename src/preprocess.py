@@ -98,6 +98,7 @@ def preprocess_and_save():
 
     print(f"\nTotal normal beats: {len(normal_beats)}")
     print(f"Total anomalous beats: {len(anomalous_beats)}")
+    np.random.shuffle(normal_beats)
 
     split = int(0.8 * len(normal_beats))
     train = normal_beats[:split]

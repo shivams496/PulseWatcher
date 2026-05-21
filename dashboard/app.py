@@ -233,10 +233,11 @@ normal_beats, anomaly_beats = load_beats()
 # ─── HELPER ─────────────────────────────────────────────────────────────────
 @st.cache_data
 def get_reconstruction(beat_index, beat_type_str):
+    normal, anomaly = load_beats()
     if beat_type_str == "Normal Beat":
-        beat = normal_beats[beat_index]
+        beat = normal[beat_index]
     else:
-        beat = anomaly_beats[beat_index]
+        beat = anomaly[beat_index]
     tensor = torch.tensor(
         beat[np.newaxis, :, np.newaxis].astype(np.float32)
     )

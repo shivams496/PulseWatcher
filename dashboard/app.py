@@ -229,15 +229,20 @@ normal_beats, anomaly_beats = load_beats()
 
 
 # ─── HELPER ─────────────────────────────────────────────────────────────────
-def get_reconstruction(beat_np):
+@st.cache_data
+def get_reconstruction(beat_index, beat_type_str):
+    if beat_type_str == "Normal Beat":
+        beat = normal_beats[beat_index]
+    else:
+        beat = anomaly_beats[beat_index]
     tensor = torch.tensor(
-        beat_np[np.newaxis, :, np.newaxis].astype(np.float32)
+        beat[np.newaxis, :, np.newaxis].astype(np.float32)
     )
     with torch.no_grad():
         output = model(tensor)
     recon = output.numpy()[0, :, 0]
-    error = float(np.mean((recon - beat_np) ** 2))
-    return recon, error
+    error = float(np.mean((recon - beat) ** 2))
+    return beat, recon, error
 
 
 # ─── SIDEBAR ────────────────────────────────────────────────────────────────
@@ -311,14 +316,8 @@ with col_badges:
 st.markdown("---")
 
 # ─── SELECT BEAT & RUN MODEL ────────────────────────────────────────────────
-if beat_type == "Normal Beat":
-    beat = normal_beats[beat_index]
-    beat_label = "Normal"
-else:
-    beat = anomaly_beats[beat_index]
-    beat_label = "Anomalous"
-
-reconstructed, error = get_reconstruction(beat)
+beat_label = "Normal" if beat_type == "Normal Beat" else "Anomalous"
+beat, reconstructed, error = get_reconstruction(beat_index, beat_type)
 is_anomaly = error > threshold
 error_pct = (error / threshold) * 100
 

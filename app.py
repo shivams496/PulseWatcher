@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.abspath("."))
 from src.model import LSTMAutoencoder
 
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────
@@ -17,6 +17,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# Prevent auto-rerun
+if "initialized" not in st.session_state:
+    st.session_state.initialized = True
 
 # ─── GLOBAL CSS ─────────────────────────────────────────────────────────────
 st.markdown("""
@@ -111,7 +114,6 @@ st.markdown("""
         color: #ef4444;
         font-family: 'IBM Plex Mono', monospace;
         letter-spacing: 1px;
-        animation: pulse 1.5s infinite;
     }
     @keyframes pulse {
         0%, 100% { opacity: 1; }
@@ -229,15 +231,21 @@ normal_beats, anomaly_beats = load_beats()
 
 
 # ─── HELPER ─────────────────────────────────────────────────────────────────
-def get_reconstruction(beat_np):
+@st.cache_data
+def get_reconstruction(beat_index, beat_type_str):
+    if beat_type_str == "Normal Beat":
+        beat = normal_beats[beat_index]
+    else:
+        beat = anomaly_beats[beat_index]
     tensor = torch.tensor(
-        beat_np[np.newaxis, :, np.newaxis].astype(np.float32)
+        beat[np.newaxis, :, np.newaxis].astype(np.float32)
     )
     with torch.no_grad():
-        output = model(tensor)
+        output = model(beat[np.newaxis, :, np.newaxis]
+                      .astype(np.float32))
     recon = output.numpy()[0, :, 0]
-    error = float(np.mean((recon - beat_np) ** 2))
-    return recon, error
+    error = float(np.mean((recon - beat) ** 2))
+    return beat.tolist(), recon.tolist(), error
 
 
 # ─── SIDEBAR ────────────────────────────────────────────────────────────────
@@ -261,8 +269,9 @@ with st.sidebar:
 
     max_index = 99
     beat_index = st.slider(
-        "Beat index", 0, max_index, 0,
-        help="Scroll through individual heartbeats from the dataset"
+    "Beat index", 0, max_index, 0,
+    help="Scroll through individual heartbeats from the dataset",
+    key="beat_slider"
     )
 
     st.markdown("---")
@@ -311,14 +320,8 @@ with col_badges:
 st.markdown("---")
 
 # ─── SELECT BEAT & RUN MODEL ────────────────────────────────────────────────
-if beat_type == "Normal Beat":
-    beat = normal_beats[beat_index]
-    beat_label = "Normal"
-else:
-    beat = anomaly_beats[beat_index]
-    beat_label = "Anomalous"
-
-reconstructed, error = get_reconstruction(beat)
+beat_label = "Normal" if beat_type == "Normal Beat" else "Anomalous"
+beat, reconstructed, error = get_reconstruction(beat_index, beat_type)
 is_anomaly = error > threshold
 error_pct = (error / threshold) * 100
 
@@ -587,3 +590,108 @@ with col_tip:
         (95th percentile of normal errors).
     </div>
     """, unsafe_allow_html=True)
+    # ─── MODEL PERFORMANCE ──────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="section-header">MODEL PERFORMANCE METRICS</div>',
+            unsafe_allow_html=True)
+
+m1, m2, m3, m4 = st.columns(4)
+
+with m1:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-label">Precision</div>
+        <div class="metric-value normal">95.21%</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with m2:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-label">Recall</div>
+        <div class="metric-value neutral">44.64%</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with m3:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-label">F1 Score</div>
+        <div class="metric-value neutral">60.79%</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with m4:
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-label">ROC-AUC</div>
+        <div class="metric-value normal">0.8678</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br/>", unsafe_allow_html=True)
+
+# ROC Curve + Confusion Matrix
+col_roc, col_cm = st.columns(2)
+
+with col_roc:
+    st.markdown('<div class="section-header">ROC CURVE</div>',
+                unsafe_allow_html=True)
+    if os.path.exists("outputs/roc_curve.png"):
+        st.image("outputs/roc_curve.png", use_container_width=True)
+    else:
+        st.warning("Run: python -m src.evaluate")
+
+with col_cm:
+    st.markdown('<div class="section-header">CONFUSION MATRIX</div>',
+                unsafe_allow_html=True)
+    if os.path.exists("outputs/confusion_matrix.png"):
+        st.image("outputs/confusion_matrix.png", use_container_width=True)
+    else:
+        st.warning("Run: python -m src.evaluate")
+
+st.markdown("<br/>", unsafe_allow_html=True)
+st.markdown('<div class="section-header">UNDERSTANDING THE METRICS</div>',
+            unsafe_allow_html=True)
+
+col_explain1, col_explain2 = st.columns(2)
+
+with col_explain1:
+    st.markdown("""
+    <div class="info-card">
+        <strong>Why is Recall 44%?</strong><br/><br/>
+        This is a deliberate tradeoff. In cardiac screening,
+        a <strong>false positive</strong> — flagging a healthy patient
+        as sick — causes unnecessary panic and expensive tests.<br/><br/>
+        We optimized for <strong>high precision first</strong>.
+        When PulseWatcher raises an alert, it is right
+        <strong>95% of the time</strong>.<br/><br/>
+        Recall can be improved by lowering the detection threshold —
+        a tunable parameter depending on clinical context.
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_explain2:
+    st.markdown("""
+    <div class="info-card">
+        <strong>What does ROC-AUC 0.8678 mean?</strong><br/><br/>
+        AUC measures the model's ability to <strong>distinguish
+        normal from anomalous beats</strong> across all thresholds.<br/><br/>
+        <span style='color:#64748b;'>Random classifier &nbsp;= 0.50</span><br/>
+        <span style='color:#3b82f6;'>PulseWatcher &nbsp;&nbsp;&nbsp;&nbsp;= 0.8678</span><br/>
+        <span style='color:#22c55e;'>Perfect classifier = 1.00</span><br/><br/>
+        Strong discriminative power — without ever seeing
+        a single anomalous beat during training.
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─── FOOTER ─────────────────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown("""
+<div style='text-align:center; padding: 20px 0 10px 0;'>
+    <div style='font-size:11px; color:#334155; font-family: IBM Plex Mono; letter-spacing:2px;'>
+        PULSEWATCHER &nbsp;·&nbsp; MIT-BIH ARRHYTHMIA DATABASE
+        &nbsp;·&nbsp; LSTM AUTOENCODER &nbsp;·&nbsp; UNSUPERVISED LEARNING
+    </div>
+</div>
+""", unsafe_allow_html=True)

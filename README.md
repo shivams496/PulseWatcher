@@ -1,3 +1,13 @@
+---
+title: PulseWatcher
+emoji: ❤️
+colorFrom: red
+colorTo: blue
+sdk: docker
+sdk_version: "1.0"
+app_file: app.py
+pinned: false
+---
 # ❤️ PulseWatcher — Real-Time ECG Anomaly Detection
 
 A deep learning system that detects cardiac arrhythmias in real-time

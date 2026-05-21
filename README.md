@@ -41,8 +41,6 @@ High error → ANOMALY ALERT 🚨
 ↓
 Per-timestep explainability chart
 
----
-
 ## 📊 Results
 
 | Metric | Score |

@@ -22,7 +22,7 @@ if "initialized" not in st.session_state:
     st.session_state.initialized = True
 
 # ─── GLOBAL CSS ─────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
 <style>
     /* Import fonts */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap');
@@ -208,7 +208,7 @@ st.markdown("""
         overflow: hidden;   
 }
 </style>
-""", unsafe_allow_html=True)
+, unsafe_allow_html=True)
 
 
 # ─── LOAD MODEL ─────────────────────────────────────────────────────────────

@@ -22,7 +22,7 @@ if "initialized" not in st.session_state:
     st.session_state.initialized = True
 
 # ─── GLOBAL CSS ─────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
 <style>
     /* Import fonts */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap');
@@ -201,8 +201,14 @@ st.markdown("""
         letter-spacing: 1px;
         margin-right: 6px;
     }
+    /* Override the element container height */
+    .st-emotion-cache-bejxwv {
+        height: auto;
+        flex: 1 1 auto;
+        overflow: hidden;   
+}
 </style>
-""", unsafe_allow_html=True)
+, unsafe_allow_html=True)
 
 
 # ─── LOAD MODEL ─────────────────────────────────────────────────────────────
@@ -449,7 +455,8 @@ fig.add_vrect(x0=110, x1=160, fillcolor="#2d1f1f",
               annotation_font=dict(color="#f87171", size=10))
 
 fig.update_layout(
-    height=380,
+    autosize=True,
+    height=None,
     plot_bgcolor="#080c18",
     paper_bgcolor="#0a0e1a",
     font=dict(color="#94a3b8", family="IBM Plex Mono"),
@@ -521,7 +528,8 @@ fig2.add_vrect(x0=60, x1=100, fillcolor="#1c2d1e", opacity=0.15, line_width=0)
 fig2.add_vrect(x0=110, x1=160, fillcolor="#2d1f1f", opacity=0.1, line_width=0)
 
 fig2.update_layout(
-    height=280,
+    autosize=True,
+    height=None,
     plot_bgcolor="#080c18",
     paper_bgcolor="#0a0e1a",
     font=dict(color="#94a3b8", family="IBM Plex Mono"),

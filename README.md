@@ -151,23 +151,9 @@ python -m src.benchmark
 
 ---
 
-## Interview Q&A
-
-**"Why LSTM over Transformer?"**
-MIT-BIH beats are 187 timesteps — short structured sequences with known temporal order (P→QRS→T). Transformers excel at long sequences with long-range dependencies. LSTM captures within-beat temporal structure naturally. The benchmark confirms it: LSTM F1 79% vs CNN F1 41%.
-
-**"Why is recall not higher?"**
-The threshold is a clinical tuning parameter. At the 95th percentile, precision is 95% but recall is 44%. At the 82nd percentile, precision drops to 89% but recall rises to 71% (+27%). The right operating point depends on the clinical context — a general ward might prefer high precision; a cardiac ICU might prefer high recall.
-
-**"How would this run in a hospital?"**
-<5ms inference on CPU. Dockerised. Threshold adjustable per cohort without retraining. The HuggingFace deployment proves it runs without a GPU.
-
----
-
 ## Tech Stack
 
 Python · PyTorch · Streamlit · NumPy · SciPy · Scikit-learn · ReportLab · Pandas
 
 ---
 
-*B.Tech Final Year Project — ECG Anomaly Detection*

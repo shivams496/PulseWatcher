@@ -1,4 +1,3 @@
-
 ---
 title: PulseWatcher
 emoji: 🫀
@@ -6,7 +5,7 @@ colorFrom: red
 colorTo: blue
 sdk: streamlit
 sdk_version: "1.32.0"
-app_file: app.py
+app_file: dashboard/app.py
 pinned: false
 ---
 

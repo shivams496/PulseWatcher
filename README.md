@@ -1,5 +1,16 @@
-# 💓 PulseWatcher — ECG Anomaly Detection System
 
+---
+title: PulseWatcher
+emoji: 🫀
+colorFrom: red
+colorTo: blue
+sdk: streamlit
+sdk_version: "1.32.0"
+app_file: app.py
+pinned: false
+---
+
+# 🫀 PulseWatcher — ECG Anomaly Detection System
 <p align="center">
   <img src="https://img.shields.io/badge/Model-LSTM%20Autoencoder-00d4ff?style=for-the-badge&logo=pytorch&logoColor=white"/>
   <img src="https://img.shields.io/badge/Dataset-MIT--BIH%20Arrhythmia-00e87a?style=for-the-badge"/>

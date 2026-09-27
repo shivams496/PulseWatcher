@@ -30,7 +30,9 @@ def anomaly_score(error, train_errors):
     return int(np.mean(train_errors < error) * 100)
 
 def sweep_thresholds(normal_errors, anomaly_errors):
-    """Sweep percentiles 82–95 and print a comparison table. Returns the best percentile."""
+    """Sweep percentiles 82–95 on the VALIDATION set and print a comparison
+    table. Returns the best percentile. Never call this with test data —
+    that's what causes threshold-tuning leakage into the final metrics."""
     y_true = np.concatenate([
         np.zeros(len(normal_errors)),
         np.ones(len(anomaly_errors))
@@ -64,26 +66,36 @@ def evaluate():
     model = load_model()
     print("Model loaded.")
 
-    train_normal = np.load("data/train.npy")
-    test_normal  = np.load("data/test.npy")
-    anomalous    = np.load("data/anomaly.npy")
+    train_normal = np.load("data/train.npy", allow_pickle=True)
+
+    # ── Validation set: used ONLY to pick the threshold ─────────────
+    # (Run `python -m src.split_holdout` once beforehand to create
+    #  these files from the original test.npy / anomaly.npy.)
+    val_normal   = np.load("data/val_normal.npy", allow_pickle=True)
+    val_anomaly  = np.load("data/val_anomaly.npy", allow_pickle=True)
+
+    # ── Test set: touched exactly once, right here, for reporting ──
+    test_normal  = np.load("data/test_normal.npy", allow_pickle=True)
+    test_anomaly = np.load("data/test_anomaly.npy", allow_pickle=True)
 
     print("Calculating errors on training beats (for anomaly score baseline)...")
     train_errors = get_reconstruction_errors(model, train_normal)
 
-    print("Calculating errors on normal test beats...")
-    normal_errors = get_reconstruction_errors(model, test_normal)
+    print("Calculating errors on validation beats (threshold selection)...")
+    val_normal_errors  = get_reconstruction_errors(model, val_normal)
+    val_anomaly_errors = get_reconstruction_errors(model, val_anomaly)
 
-    print("Calculating errors on anomalous beats...")
-    anomaly_errors = get_reconstruction_errors(model, anomalous)
+    # ── Threshold sweep on VALIDATION data only ─────────────────────
+    best_pct = sweep_thresholds(val_normal_errors, val_anomaly_errors)
+    threshold = np.percentile(val_normal_errors, best_pct)
 
-    # ── Threshold sweep ────────────────────────────────────────────
-    best_pct = sweep_thresholds(normal_errors, anomaly_errors)
-    threshold = np.percentile(normal_errors, best_pct)
+    print("Calculating errors on held-out test beats (final report)...")
+    test_normal_errors  = get_reconstruction_errors(model, test_normal)
+    test_anomaly_errors = get_reconstruction_errors(model, test_anomaly)
 
-    # ── Final metrics at best threshold ───────────────────────────
-    y_true  = np.concatenate([np.zeros(len(normal_errors)), np.ones(len(anomaly_errors))])
-    y_scores = np.concatenate([normal_errors, anomaly_errors])
+    # ── Final metrics at that threshold, on the untouched test set ──
+    y_true  = np.concatenate([np.zeros(len(test_normal_errors)), np.ones(len(test_anomaly_errors))])
+    y_scores = np.concatenate([test_normal_errors, test_anomaly_errors])
     y_pred  = (y_scores > threshold).astype(int)
 
     precision = precision_score(y_true, y_pred, zero_division=0)
@@ -92,7 +104,8 @@ def evaluate():
     auc       = roc_auc_score(y_true, y_scores)
     cm        = confusion_matrix(y_true, y_pred)
 
-    print(f"\n── Final Metrics at {best_pct}th Percentile Threshold ──")
+    print(f"\n── Final Metrics on HELD-OUT TEST SET at {best_pct}th Percentile Threshold ──")
+    print("(threshold chosen on validation data only — test set never touched until now)")
     print(f"Threshold : {threshold:.6f}")
     print(f"Precision : {precision:.4f}")
     print(f"Recall    : {recall:.4f}")
@@ -114,6 +127,9 @@ def evaluate():
         "recall":    float(recall),
         "f1":        float(f1),
         "auc":       float(auc),
+        "note": "Threshold chosen on val_normal/val_anomaly; "
+                "precision/recall/f1/auc reported on test_normal/test_anomaly, "
+                "a set never used for training or threshold selection.",
     }
     import json
     with open("models/metrics.json", "w") as fp:

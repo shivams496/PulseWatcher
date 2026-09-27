@@ -1,8 +1,9 @@
 {
   "threshold_percentile": 82,
-  "threshold": 0.0043325359001755714,
-  "precision": 0.8982461445418809,
-  "recall": 0.7134622312957848,
-  "f1": 0.7952613613546616,
-  "auc": 0.8677726717239906
+  "threshold": 0.003970006015151739,
+  "precision": 0.884191771946874,
+  "recall": 0.6555782394619911,
+  "f1": 0.7529135921660575,
+  "auc": 0.8505066203885427,
+  "note": "Threshold chosen on val_normal/val_anomaly; precision/recall/f1/auc reported on test_normal/test_anomaly, a set never used for training or threshold selection."
 }

@@ -17,19 +17,26 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 def load_data():
-    """Load preprocessed training data and reshape for LSTM."""
-    train = np.load("data/train.npy")   # shape: (59816, 187)
-    test = np.load("data/test.npy")     # shape: (14955, 187)
+    """Load preprocessed training data and reshape for LSTM.
 
-    # ✅ NEW: Shuffle to avoid data leakage
+    NOTE: validation now comes from data/val_normal.npy, not
+    data/test.npy. test_normal.npy / test_anomaly.npy are held
+    out entirely and only touched once, by evaluate.py, for the
+    final reported metrics. Run `python -m src.split_holdout`
+    once before training if those files don't exist yet.
+    """
+    train = np.load("data/train.npy", allow_pickle=True)        # shape: (59816, 187)
+    val = np.load("data/val_normal.npy", allow_pickle=True)      # held-out, early stopping only
+
+    # ✅ Shuffle to avoid ordering effects
     np.random.shuffle(train)
-    np.random.shuffle(test)
+    np.random.shuffle(val)
 
     # Add the feature dimension: (samples, timesteps, 1)
     train = train[:, :, np.newaxis].astype(np.float32)
-    test = test[:, :, np.newaxis].astype(np.float32)
+    val = val[:, :, np.newaxis].astype(np.float32)
 
-    return train, test
+    return train, val
 
 def train_model():
     train_data, val_data = load_data()
@@ -57,7 +64,7 @@ def train_model():
 
     # ✅ NEW: Scheduler - reduces LR when val loss stops improving
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, patience=3, factor=0.5, verbose=True
+        optimizer, patience=3, factor=0.5
     )
 
     print(f"Training on {len(train_data)} beats for {EPOCHS} epochs...")

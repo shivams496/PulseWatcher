@@ -25,10 +25,13 @@ print(f"Device: {DEVICE}")
 
 
 # ── Load data ─────────────────────────────────────────────────
+# Uses the same held-out test_normal/test_anomaly as evaluate.py
+# (run `python -m src.split_holdout` first) so the CNN and LSTM
+# rows in the comparison table are evaluated on identical, untouched data.
 print("Loading data...")
-train_data    = np.load("data/train.npy")
-normal_test   = np.load("data/test.npy")
-anomaly_test  = np.load("data/anomaly.npy")
+train_data    = np.load("data/train.npy", allow_pickle=True)
+normal_test   = np.load("data/test_normal.npy", allow_pickle=True)
+anomaly_test  = np.load("data/test_anomaly.npy", allow_pickle=True)
 
 # Tensors -- shape (N, 187, 1)
 def to_tensor(arr):
